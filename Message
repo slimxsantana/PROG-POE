@@ -1,0 +1,128 @@
+import java.util.Scanner;
+
+public class QuickChatApp {
+
+    static class Message {
+        private String messageID;
+        private String recipientCell;
+        private String messageBody;
+
+        public Message(String messageID, String recipientCell, String messageBody) {
+            this.messageID = messageID;
+            this.recipientCell = recipientCell;
+            this.messageBody = messageBody;
+        }
+
+        public boolean checkMessageID() {
+            return this.messageID != null && this.messageID.length() <= 10;
+        }
+
+        public String checkRecipientCell() {
+            if (this.recipientCell == null || this.recipientCell.isEmpty() || 
+                !this.recipientCell.matches("[0-9]+") || this.recipientCell.length() > 10) {
+                return "Incorrect number.";
+            }
+            return "Valid";
+        }
+
+        public String createMessageHash(int currentMessageNumber) {
+            String prefix = (this.messageID.length() >= 2) ? this.messageID.substring(0, 2) : (this.messageID + "0");
+            String[] words = this.messageBody.trim().split("\\s+");
+            String trackingWords = (words.length > 0) ? (words[0] + words[words.length - 1]) : "";
+            return (prefix + ":" + currentMessageNumber + ":" + trackingWords).toUpperCase();
+        }
+
+        public String SentMessage(Scanner scanner) {
+            System.out.println("\nWhat would you like to do with this message?");
+            System.out.print("Type A to Send, B to Store, or C to Disregard: ");
+            return scanner.nextLine().trim().toUpperCase();
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("*********************************");
+        System.out.println("Welcome to QuickChat.");
+        System.out.println("*********************************");
+
+        int maxMessages = 0;
+        while (true) {
+            try {
+                System.out.print("How many messages do you wish to enter? ");
+                maxMessages = Integer.parseInt(scanner.nextLine().trim());
+                if (maxMessages > 0) break;
+                System.out.println("Please enter a positive number.");
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a number.");
+            }
+        }
+
+        int totalSentCount = 0;
+        boolean running = true;
+
+        while (running) {
+            System.out.println("\n--- MAIN MENU ---");
+            System.out.println("1) Send Messages");
+            System.out.println("2) Show recently sent messages");
+            System.out.println("3) Quit");
+            System.out.print("Please select an option (1-3): ");
+
+            String choice = scanner.nextLine().trim();
+
+            switch (choice) {
+                case "1":
+                    if (totalSentCount >= maxMessages) {
+                        System.out.println("\n[Limit Reached] You cannot send more than " + maxMessages + " messages.");
+                        break;
+                    }
+
+                    System.out.println("\n--- Compose Message (" + (totalSentCount + 1) + "/" + maxMessages + ") ---");
+                    System.out.print("Enter Message ID: ");
+                    String id = scanner.nextLine();
+
+                    String cell = "";
+                    boolean validCell = false;
+                    while (!validCell) {
+                        System.out.print("Enter Recipient Cell: ");
+                        cell = scanner.nextLine().trim();
+                        
+                        Message dynamicCheck = new Message(id, cell, "");
+                        if (dynamicCheck.checkRecipientCell().equals("Incorrect number.")) {
+                            System.out.println("Incorrect number. Please try again (Numbers only, max 10 digits).");
+                        } else {
+                            validCell = true;
+                        }
+                    }
+
+                    System.out.print("Enter Message Text: ");
+                    String body = scanner.nextLine();
+
+                    Message messageInstance = new Message(id, cell, body);
+                    String action = messageInstance.SentMessage(scanner);
+
+                    if (action.equals("A") || action.equals("B")) {
+                        System.out.println("\nMessage processed successfully!");
+                        System.out.println("Generated Hash: " + messageInstance.createMessageHash(totalSentCount));
+                        totalSentCount++;
+                    } else {
+                        System.out.println("\nMessage disregarded. Not tracked.");
+                    }
+                    break;
+
+                case "2":
+                    System.out.println("\nComing Soon.");
+                    break;
+
+                case "3":
+                    System.out.println("\nExiting QuickChat. Goodbye!");
+                    running = false;
+                    break;
+
+                default:
+                    System.out.println("\nInvalid option. Please enter 1, 2, or 3.");
+            }
+        }
+        scanner.close();
+    }
+}
